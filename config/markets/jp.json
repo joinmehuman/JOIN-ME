@@ -1,0 +1,37 @@
+{
+  "schema_version": "1.0",
+  "market_code": "JP",
+  "state": "PRELAUNCH",
+  "enabled": false,
+  "minimum_age": 18,
+  "legal_evidence_reviewed_at": "2026-08-20",
+  "legal_evidence_status": "completed",
+  "legal_approval_status": "pending_qualified_japan_counsel",
+  "legal_owner": null,
+  "legal_approved_at": null,
+  "review_expires_at": null,
+  "terms_version": null,
+  "privacy_version": null,
+  "ai_disclosure_version": null,
+  "data_residency": null,
+  "cross_border_basis": null,
+  "crisis_pack": "JP-2026-08-20",
+  "crisis_review_due": "2026-11-18",
+  "payment_enabled": false,
+  "currency": "JPY",
+  "passes": [
+    {
+      "id": "24h",
+      "price_tax_inclusive": 110,
+      "duration_hours": 24,
+      "auto_renew": false
+    },
+    {
+      "id": "30d",
+      "price_tax_inclusive": 380,
+      "duration_hours": 720,
+      "auto_renew": false
+    }
+  ],
+  "monthly_subscription": "not_offered"
+}
