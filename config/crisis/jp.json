@@ -1,0 +1,94 @@
+{
+  "schema_version": "1.0",
+  "market": "JP",
+  "language": "ja",
+  "enabled": true,
+  "verified_at": "2026-08-20",
+  "review_due": "2026-11-18",
+  "fallback": {
+    "message": "今すぐ生命・身体の危険がある場合は、日本の救急・消防119または警察110へ連絡してください。",
+    "medical_fire": "119",
+    "police": "110"
+  },
+  "routes": [
+    {
+      "id": "emergency_medical_fire",
+      "priority": 1,
+      "label": "救急・消防",
+      "phone": "119",
+      "availability": "24/7",
+      "source": "https://www.fdma.go.jp/mission/enrichment/kyukyumusen_kinkyutuhou/119.html"
+    },
+    {
+      "id": "emergency_police",
+      "priority": 1,
+      "label": "警察（事件・事故）",
+      "phone": "110",
+      "availability": "24/7",
+      "source": "https://www.npa.go.jp/goiken_index.html"
+    },
+    {
+      "id": "suicide_inochi_sos",
+      "priority": 2,
+      "label": "#いのちSOS",
+      "phone": "0120-061-338",
+      "availability": "24/7",
+      "cost": "free",
+      "source": "https://www.mhlw.go.jp/mamorouyokokoro/soudan/tel/"
+    },
+    {
+      "id": "suicide_yorisoi",
+      "priority": 2,
+      "label": "よりそいホットライン",
+      "phone": "0120-279-338",
+      "ip_phone": "050-3655-0279",
+      "fukushima": "0120-279-226",
+      "availability": "24/7",
+      "cost": "free",
+      "source": "https://www.mhlw.go.jp/mamorouyokokoro/soudan/tel/"
+    },
+    {
+      "id": "mental_health_prefecture",
+      "priority": 3,
+      "label": "こころの健康相談統一ダイヤル",
+      "phone": "0570-064-556",
+      "availability": "prefecture-specific",
+      "cost": "charged",
+      "source": "https://www.mhlw.go.jp/mamorouyokokoro/soudan/tel/"
+    },
+    {
+      "id": "domestic_violence",
+      "priority": 2,
+      "label": "DV相談＋",
+      "phone": "0120-279-889",
+      "availability": "phone 24/7",
+      "cost": "free",
+      "source": "https://www.gender.go.jp/policy/sokushin/ouen/safe/dv/"
+    },
+    {
+      "id": "sexual_violence",
+      "priority": 2,
+      "label": "性犯罪・性暴力被害者のためのワンストップ支援センター",
+      "phone": "#8891",
+      "availability": "national routing; local handling varies",
+      "source": "https://www.gender.go.jp/policy/no_violence/seibouryoku/consult.html"
+    },
+    {
+      "id": "police_non_emergency",
+      "priority": 3,
+      "label": "警察相談専用電話",
+      "phone": "#9110",
+      "availability": "prefecture-specific",
+      "source": "https://www.npa.go.jp/goiken_index.html"
+    },
+    {
+      "id": "consumer_contract_billing",
+      "priority": 4,
+      "label": "消費者ホットライン",
+      "phone": "188",
+      "availability": "local-center hours",
+      "cost": "consultation free; call charges apply after connection",
+      "source": "https://www.caa.go.jp/policies/policy/local_cooperation/local_consumer_administration/hotline/"
+    }
+  ]
+}
