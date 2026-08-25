@@ -77,8 +77,12 @@ def parse_html(path: Path) -> tuple[str, SurfaceParser]:
 
 index_text, index = parse_html(ROOT / "index.html")
 support_text, support = parse_html(ROOT / "support-jp.html")
+trial_text, trial = parse_html(ROOT / "trial" / "index.html")
 script_text = (ROOT / "script.js").read_text(encoding="utf-8")
 css_text = (ROOT / "style.css").read_text(encoding="utf-8")
+trial_script_text = (ROOT / "trial" / "trial.js").read_text(encoding="utf-8")
+trial_css_text = (ROOT / "trial" / "trial.css").read_text(encoding="utf-8")
+all_script_text = script_text + "\n" + trial_script_text
 readme_text = (ROOT / "README.md").read_text(encoding="utf-8")
 
 required_csp = (
@@ -91,9 +95,10 @@ required_csp = (
     "connect-src 'none'",
 )
 
-for name, text, parser in (
-    ("index", index_text, index),
-    ("support", support_text, support),
+for name, path, text, parser in (
+    ("index", ROOT / "index.html", index_text, index),
+    ("support", ROOT / "support-jp.html", support_text, support),
+    ("trial", ROOT / "trial" / "index.html", trial_text, trial),
 ):
     duplicate_ids = sorted({item for item in parser.ids if parser.ids.count(item) > 1})
     structure_ok = all(
@@ -107,7 +112,7 @@ for name, text, parser in (
         )
     )
     record(f"HTML-{name.upper()}-STRUCTURE", structure_ok, f"duplicate_ids={duplicate_ids or 'none'}")
-    missing = sorted({ref for ref in parser.local_refs if ref and not (ROOT / ref).exists()})
+    missing = sorted({ref for ref in parser.local_refs if ref and not (path.parent / ref).exists()})
     record(f"HTML-{name.upper()}-LOCAL-REFS", not missing, f"missing={missing or 'none'}")
     record(f"PRIVACY-{name.upper()}-NO-CAPTURE", not parser.capture_tags, f"capture_tags={parser.capture_tags or 'none'}")
     record(f"PRIVACY-{name.upper()}-NO-AUTO-THIRD-PARTY", not parser.auto_origins, f"auto_origins={sorted(parser.auto_origins) or 'none'}")
@@ -121,40 +126,42 @@ for name, text, parser in (
 
 record("HTML-INDEX-SINGLE-SCRIPT", index.script_sources == ["script.js"], f"scripts={index.script_sources}")
 record("HTML-SUPPORT-NO-SCRIPT", not support.script_sources, f"scripts={support.script_sources or 'none'}")
+record("HTML-TRIAL-SINGLE-SCRIPT", trial.script_sources == ["trial.js"], f"scripts={trial.script_sources}")
 
-node_check = subprocess.run(
-    ["node", "--check", str(ROOT / "script.js")],
-    capture_output=True,
-    text=True,
-    check=False,
-)
-record("JS-SYNTAX", node_check.returncode == 0, node_check.stderr.strip() or "node --check passed")
+for name, path in (("ROOT", ROOT / "script.js"), ("TRIAL", ROOT / "trial" / "trial.js")):
+    node_check = subprocess.run(
+        ["node", "--check", str(path)],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    record(f"JS-{name}-SYNTAX", node_check.returncode == 0, node_check.stderr.strip() or "node --check passed")
 
 unsafe_js = sorted(
     pattern
     for pattern in ("eval(", "new Function", "document.write", ".innerHTML", ".outerHTML", "insertAdjacentHTML")
-    if pattern in script_text
+    if pattern in all_script_text
 )
 record("JS-NO-DYNAMIC-CODE-OR-HTML-SINK", not unsafe_js, f"matches={unsafe_js or 'none'}")
 
 network_js = sorted(
     pattern
     for pattern in ("fetch(", "XMLHttpRequest", "WebSocket", "sendBeacon", "EventSource")
-    if pattern in script_text
+    if pattern in all_script_text
 )
 record("PRIVACY-JS-NO-NETWORK-SEND", not network_js, f"matches={network_js or 'none'}")
 
 storage_js = sorted(
     pattern
     for pattern in ("localStorage", "sessionStorage", "indexedDB", "caches.", "CacheStorage")
-    if pattern in script_text
+    if pattern in all_script_text
 )
 record("PRIVACY-JS-NO-PERSISTENT-STORAGE", not storage_js, f"matches={storage_js or 'none'}")
 
 tracking_terms = sorted(
     term
     for term in ("google-analytics", "gtag(", "segment", "mixpanel", "amplitude", "fullstory", "hotjar", "logrocket", "sessionreplay")
-    if term.lower() in (index_text + support_text + script_text).lower()
+    if term.lower() in (index_text + support_text + trial_text + all_script_text).lower()
 )
 record("PRIVACY-NO-ANALYTICS-OR-SESSION-REPLAY", not tracking_terms, f"matches={tracking_terms or 'none'}")
 
@@ -175,8 +182,28 @@ record("SECRETS-STATIC-SCAN", not secret_hits, f"matches={secret_hits or 'none'}
 prelaunch_phrases = ("おかえり", "現在は開発確認ページです", "入力・AI・会員登録・保存・決済はまだ利用できません")
 record(
     "SURFACE-PRELAUNCH-TRUTHFUL",
-    all(phrase in index_text for phrase in prelaunch_phrases),
+    all(phrase in index_text for phrase in ("おかえり", "現在は開発確認ページです", "文字入力・AI・会員登録・保存・決済なし")),
     f"required={prelaunch_phrases}",
+)
+
+trial_required = (
+    "無料の1分体験",
+    "文字入力、AI、会員登録、端末保存、外部送信、分析、決済はありません",
+    "18歳以上向け",
+    "水面に触れる",
+    "動き：オン",
+    "音：オフ",
+)
+record("SURFACE-TRIAL-TRUTHFUL", all(term in trial_text for term in trial_required), f"required={trial_required}")
+record(
+    "TRIAL-CONTROLS-MOTION-AND-SOUND",
+    all(term in trial_script_text for term in ("prefers-reduced-motion", "disableSound", "AudioContext", "has-ripple")),
+    "reduced-motion, immediate sound stop, user-initiated Web Audio, and touch ripple implemented",
+)
+record(
+    "TRIAL-NO-AUTOPLAY-OR-MEDIA-ASSET",
+    "autoplay" not in trial_text.lower() and not re.search(r"<(audio|video|source)(?:\s|>)", trial_text, re.I),
+    "no autoplay attribute or media element",
 )
 
 misleading_or_sales_terms = sorted(
@@ -251,25 +278,31 @@ record(
     f"registry={sorted(normalized_registry)}; displayed={sorted(displayed)}",
 )
 
-css_external = re.findall(r"url\(\s*['\"]?https?://", css_text, re.I)
+css_external = re.findall(r"url\(\s*['\"]?https?://", css_text + "\n" + trial_css_text, re.I)
 record("CSS-NO-REMOTE-ASSETS", not css_external, f"remote_url_count={len(css_external)}")
+
+css_balanced = all(
+    text.count("{") == text.count("}")
+    for text in (css_text, trial_css_text)
+)
+record("CSS-BRACES-BALANCED", css_balanced, "root and trial CSS brace counts match")
 
 readme_ok = all(
     phrase in readme_text
-    for phrase in ("GitHub Pages", "入力、AI生成、会員登録、端末保存、決済は公開していません", "python3 tests/security_static.py")
+    for phrase in ("GitHub Pages", "自由記述入力、AI生成、会員登録、端末保存、決済は公開していません", "python3 tests/security_static.py")
 )
 record("DOCS-CURRENT-SCOPE", readme_ok, "README describes the current prelaunch scope")
 
 failed = [item for item in results if item["status"] == "FAIL"]
 report = {
-    "scope": "GitHub Pages prelaunch surface, Japan crisis registry, and fail-closed market configuration",
+    "scope": "GitHub Pages prelaunch and no-storage trial surfaces, Japan crisis registry, and fail-closed market configuration",
     "tested_at": TODAY.isoformat(),
     "overall": "PASS_CURRENT_STATIC_SURFACE" if not failed else "FAIL",
     "product_release_gate": "BLOCKED_NOT_IMPLEMENTED",
     "tests_total": len(results),
     "tests_passed": len(results) - len(failed),
     "not_testable_in_current_repo": [
-        "question input and deletion E2E",
+        "free-text question input and deletion E2E",
         "AI input/output dual safety classifier",
         "authentication and authorization",
         "encrypted IndexedDB save and delete-after-retrieval E2E",
