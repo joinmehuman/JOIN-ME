@@ -188,13 +188,18 @@ record(
 
 trial_required = (
     "無料の1分体験",
-    "文字入力、AI、会員登録、端末保存、外部送信、分析、決済はありません",
+    "文字入力、AI、会員登録、端末保存、選択内容の外部送信・分析、決済はありません",
     "18歳以上向け",
     "水面に触れる",
     "動き：オン",
     "音：オフ",
 )
 record("SURFACE-TRIAL-TRUTHFUL", all(term in trial_text for term in trial_required), f"required={trial_required}")
+record(
+    "SURFACE-TRIAL-HOST-PRIVACY-DISCLOSURE",
+    all(term in trial_text for term in ("GitHubがIPアドレス", "端末情報", "アクセス日時", "github-general-privacy-statement")),
+    "GitHub Pages host processing is disclosed separately from selection data",
+)
 record(
     "TRIAL-CONTROLS-MOTION-AND-SOUND",
     all(term in trial_script_text for term in ("prefers-reduced-motion", "disableSound", "AudioContext", "has-ripple")),
