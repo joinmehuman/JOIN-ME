@@ -2,241 +2,143 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'none'; media-src 'none'; manifest-src 'self'; worker-src 'none'; upgrade-insecure-requests">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>JOIN ME | 答えを探すより、自分と出会おう。</title>
-
-  <meta name="description" content="JOIN MEは、正解を決めつけず、複数の視点から自己理解を深めるための自己観察サービスです。">
+  <meta name="description" content="問いの鏡は、自分を決めつけず、いまの状態と言葉を見つめるための自己観察プロダクトです。">
   <meta name="referrer" content="no-referrer">
-
+  <title>問いの鏡 | JOIN ME</title>
   <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
-
-<header class="header">
-  <div class="container">
-    <div class="logo">JOIN ME</div>
-
-    <nav>
-      <a href="#concept">Concept</a>
-      <a href="#how">How</a>
-      <a href="#value">Value</a>
-      <a href="#message">Message</a>
-    </nav>
-  </div>
-</header>
-
-<section class="hero">
-
-  <div class="hero-content">
-
-    <h1>
-      答えを探すより、<br>
-      自分と出会おう。
-    </h1>
-
-    <p>
-
-      あなたは、一つの言葉では表せません。<br><br>
-
-      JOIN MEは、あなたを分類したり、 決めつけたりする場所ではありません。<br><br>
-
-      複数の視点や、あえて逆の可能性にも目を向けながら、あなた自身が自分を見つめ直すための場所です。
-
-    </p>
-
-   
-    <a href="#concept" class="cta-button">
-      自己観察を始める
-    </a>
-
-  </div>
-
-</section>
-
-<section id="concept" class="section">
-
-  <div class="container">
-
-    <h2>自己理解は、「答え」を見つけることではない。</h2>
-
-    <p>
-
-      「私はこういう人だ。」<br><br>
-
-      そう思っていることも、環境や時間、人との関わりによって 変わるかもしれません。<br><br>
-
-      一つの見方だけで自分を決めるのではなく、 別の可能性にも目を向ける。<br><br>
-
-      JOIN MEは、そんな自己観察のきっかけをつくります。
-
-    </p>
-
-  </div>
-
-</section>
-
-<section id="pricing" class="section">
-  <div class="container">
-    <h2>期間パス</h2>
-    <p>18歳以上向け。いずれも税込・買い切りで、自動更新はありません。</p>
-    <div class="cards">
-      <div class="card">
-        <h3>24時間使い放題</h3>
-        <p><strong>110円</strong>／決済成功から24時間</p>
-      </div>
-      <div class="card">
-        <h3>30日パス</h3>
-        <p><strong>380円</strong>／決済成功から720時間</p>
-      </div>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="index.html" aria-label="JOIN ME トップ">JOIN ME</a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-menu">
+        メニュー
+      </button>
+      <nav id="site-menu" class="site-nav" aria-label="メインメニュー">
+        <a href="trial/">無料の1分体験</a>
+        <a href="#about">問いの鏡</a>
+        <a href="#flow">体験の流れ</a>
+        <a href="#status">公開状況</a>
+        <a href="#safety">安全</a>
+        <a href="support-jp.html">危機支援先</a>
+      </nav>
     </div>
-    <p class="note">月額サブスクは現時点では導入しません。危機支援、安全情報、データ削除、AI利用表示は課金の有無にかかわらず利用できます。</p>
-  </div>
-</section>
+  </header>
 
-<section id="safety" class="section alt">
-  <div class="container">
-    <h2>安全と透明性</h2>
-    <p>JOIN MEは医療・心理・法律上の診断や判断を行いません。AIは別の視点の生成を補助します。緊急時や、今すぐ自分・他人の安全が危ない場合は、通常体験ではなく公的・専門の支援先を利用してください。</p>
-    <p><a class="text-link" href="support-jp.html">日本の緊急・危機支援先を見る</a></p>
-  </div>
-</section>
+  <main>
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="water-orb" aria-hidden="true"></div>
+      <div class="container hero-content">
+        <p class="eyebrow">問いの鏡</p>
+        <h1 id="hero-title">おかえり</h1>
+        <p class="hero-copy">
+          答えを決めつけず、いまの自分を静かに見つめる場所を準備しています。
+        </p>
+        <p class="release-note">
+          現在は開発確認ページです。無料の1分体験は、文字入力・AI・会員登録・保存・決済なしで利用できます。
+        </p>
+        <div class="hero-actions">
+          <a class="button primary-button" href="trial/">無料の1分体験を開く</a>
+          <a class="button secondary-button" href="#flow">体験の流れを見る</a>
+          <a class="button secondary-button" href="support-jp.html">日本の危機支援先</a>
+        </div>
+      </div>
+    </section>
 
-<section id="how" class="section alt">
-
-  <div class="container">
-
-    <h2>3つのステップ</h2>
-
-    <div class="cards">
-
-      <div class="card">
-        <h3>1</h3>
-        <h4>今の自分を言葉にする</h4>
+    <section id="about" class="content-section">
+      <div class="container narrow">
+        <p class="eyebrow">問いの鏡について</p>
+        <h2>答えを与えるのではなく、自分を見るための問いを置く。</h2>
         <p>
-          感じていることや
-          考えていることを書き出します。
+          問いの鏡は、性格や人生を断定する場所ではありません。
+          一つの見方に閉じず、異なる可能性に触れながら、自分の言葉を確かめるための自己観察体験です。
         </p>
       </div>
+    </section>
 
-      <div class="card">
-        <h3>2</h3>
-        <h4>複数の視点を受け取る</h4>
-        <p>
-          AIは一つの答えではなく、
-          異なる解釈や反対の仮説も提示します。
+    <section id="flow" class="content-section tinted-section">
+      <div class="container narrow">
+        <p class="eyebrow">予定している体験</p>
+        <h2>状態から、水庭へ。</h2>
+        <ol class="flow-list">
+          <li>
+            <span class="step-number">1</span>
+            <div><h3>いまの状態を選ぶ</h3><p>決めつけず、近い感覚を選びます。</p></div>
+          </li>
+          <li>
+            <span class="step-number">2</span>
+            <div><h3>言葉を置く</h3><p>まとまっていなくても、そのままの言葉を置きます。</p></div>
+          </li>
+          <li>
+            <span class="step-number">3</span>
+            <div><h3>3つの視点に触れる</h3><p>正解ではなく、見方を広げるための視点を受け取ります。</p></div>
+          </li>
+          <li>
+            <span class="step-number">4</span>
+            <div><h3>必要な視点を水庭へ</h3><p>残したい視点だけを、自分で選びます。</p></div>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <section id="status" class="content-section">
+      <div class="container narrow">
+        <p class="eyebrow">現在の公開状況</p>
+        <h2>使えるものと、まだ使えないもの。</h2>
+        <div class="cards">
+          <article class="card">
+            <h3>現在確認できるもの</h3>
+            <ul class="status-list">
+              <li>問いの鏡のコンセプト</li>
+              <li>予定している4段階の流れ</li>
+              <li>選択式の1分体験と水庭の演出</li>
+              <li>停止できる動きと、操作後だけ鳴る音</li>
+              <li>安全とAI利用方針</li>
+              <li>日本の緊急・危機支援先</li>
+            </ul>
+          </article>
+          <article class="card">
+            <h3>現在停止しているもの</h3>
+            <ul class="status-list">
+              <li>自由記述の問い・回答入力</li>
+              <li>AIによる視点生成</li>
+              <li>会員登録と端末保存</li>
+              <li>期間パスと決済</li>
+            </ul>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="safety" class="content-section tinted-section">
+      <div class="container narrow">
+        <p class="eyebrow">安全と透明性</p>
+        <h2>公開前に守ること。</h2>
+        <ul class="safety-list">
+          <li>初期公開は18歳以上を対象にします。</li>
+          <li>医療・心理・法律上の診断や判断を行いません。</li>
+          <li>人格、未来、正解を断定しません。</li>
+          <li>問い・回答本文を分析、広告、ログへ送りません。</li>
+          <li>危機支援、安全情報、削除、AI利用表示は有料化しません。</li>
+        </ul>
+        <p class="safety-link">
+          今すぐ自分や他人の安全が危ない場合は、
+          <a href="support-jp.html">日本の緊急・危機支援先</a>を利用してください。
         </p>
       </div>
+    </section>
+  </main>
 
-      <div class="card">
-        <h3>3</h3>
-        <h4>自分で考える</h4>
-        <p>
-          最後に答えを決めるのはAIではありません。<br>
-          あなた自身が、
-          納得できる答えを見つけます。
-        </p>
-      </div>
-
+  <footer class="site-footer">
+    <div class="container narrow">
+      <p class="brand">JOIN ME</p>
+      <p>問いの鏡 — 開発確認ページ</p>
+      <p>© 2026 JOIN ME. All Rights Reserved.</p>
     </div>
+  </footer>
 
-  </div>
-
-</section>
-
-<section id="value" class="section">
-
-  <div class="container">
-
-    <h2>JOIN MEが大切にしていること</h2>
-
-    <div class="cards">
-
-      <div class="card">
-        <h3>正解を決めない</h3>
-        <p>一つの結論だけを押し付けません。</p>
-      </div>
-
-      <div class="card">
-        <h3>複数の可能性を見る</h3>
-        <p>異なる視点を知ることで、思考の幅を広げます。</p>
-      </div>
-
-      <div class="card">
-        <h3>逆の発想も考える</h3>
-        <p>今の答えとは反対の可能性にも目を向けます。</p>
-      </div>
-
-      <div class="card">
-        <h3>自分で選ぶ</h3>
-        <p>答えはAIではなく、あなた自身が見つけます。</p>
-      </div>
-
-    </div>
-
-  </div>
-
-</section>
-
-<section id="message" class="section alt">
-
-  <div class="container">
-
-    <h2>あなたは、<br>まだ知らない自分と出会える。</h2>
-
-    <p>
-
-      自分を知ることは、
-      自分を決めることではありません。<br><br>
-
-      変わることも、
-      迷うことも、
-      矛盾することも、
-      あなたの一部です。<br><br>
-
-      JOIN MEは、
-      答えを与えるサービスではなく、
-      新しい視点と問いを届けるサービスです。
-
-    </p>
-
-  </div>
-
-</section>
-
-<section class="cta">
-
-  <div class="container">
-
-    <h2>今日の問いから始めよう。</h2>
-
-    <p>
-
-      今のあなたは、<br>
-      本当に「そのあなた」だけでしょうか。
-
-    </p>
-
-    <a href="#concept" class="cta-button">
-       自己観察を始める
-    </a>
-
-  </div>
-</section>
-
-<footer>
-
-  <h3>JOIN ME</h3>
-
-  <p>Think. Observe. Discover.</p>
-
-  <p><a class="text-link" href="support-jp.html">日本の危機支援先</a></p>
-
-  <p>© 2026 JOIN ME. All Rights Reserved.</p>
-
-</footer>
-
-<script src="script.js" defer></script>
-
+  <script src="script.js" defer></script>
 </body>
 </html>
