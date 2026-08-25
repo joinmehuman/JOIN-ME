@@ -13,6 +13,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const pond = document.querySelector("#pond");
   const motionToggle = document.querySelector("#motion-toggle");
   const soundToggle = document.querySelector("#sound-toggle");
+  const plusSampleButton = document.querySelector("#plus-sample-button");
+  const plusStatus = document.querySelector("#plus-status");
+  const soundForest = document.querySelector("#sound-forest");
   const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 
   const experience = {
@@ -23,6 +26,7 @@ document.addEventListener("DOMContentLoaded", () => {
     soundEnabled: false,
     audioContext: null,
     activeSources: new Set(),
+    plusUsed: false,
     motionEnabled: !reducedMotion.matches,
     motionUserOverride: false,
   };
@@ -76,62 +80,127 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     experience.soundEnabled = false;
     soundToggle.setAttribute("aria-pressed", "false");
-    soundToggle.textContent = "音：オフ";
+    soundToggle.textContent = "音を試す";
     announce("音を停止しました");
   };
 
-  const playWaterTone = (viewIndex = 0) => {
-    const context = experience.audioContext;
-    if (!experience.soundEnabled || !context) {
-      return;
-    }
-
-    if (context.state === "suspended") {
-      context.resume().catch(() => {});
-    }
-
-    const toneSets = [
-      [392.0, 523.25, 659.25],
-      [349.23, 493.88, 587.33],
-      [440.0, 554.37, 659.25],
-    ];
-    const now = context.currentTime;
-    const master = context.createGain();
-    master.gain.setValueAtTime(0.0001, now);
-    master.gain.exponentialRampToValueAtTime(0.028, now + 0.05);
-    master.gain.exponentialRampToValueAtTime(0.0001, now + 1.45);
-    master.connect(context.destination);
-
-    toneSets[viewIndex % toneSets.length].forEach((frequency, layerIndex) => {
-      const source = context.createOscillator();
-      const layerGain = context.createGain();
-      source.type = layerIndex === 0 ? "sine" : "triangle";
-      source.frequency.setValueAtTime(frequency, now);
-      layerGain.gain.setValueAtTime(layerIndex === 0 ? 0.58 : 0.21, now);
-      source.connect(layerGain);
-      layerGain.connect(master);
-      experience.activeSources.add(source);
-      source.addEventListener("ended", () => experience.activeSources.delete(source), { once: true });
-      source.start(now + layerIndex * 0.055);
-      source.stop(now + 1.5);
-    });
-  };
-
-  const enableSound = () => {
+  const prepareAudio = async () => {
     const AudioEngine = window.AudioContext || window.webkitAudioContext;
     if (!AudioEngine) {
       soundToggle.textContent = "音：非対応";
       soundToggle.disabled = true;
       announce("このブラウザでは音を再生できません");
-      return;
+      return false;
     }
 
-    experience.audioContext = new AudioEngine();
+    if (!experience.audioContext || experience.audioContext.state === "closed") {
+      try {
+        experience.audioContext = new AudioEngine({ latencyHint: "interactive" });
+      } catch (_error) {
+        experience.audioContext = new AudioEngine();
+      }
+    }
+
+    const context = experience.audioContext;
+    const unlockSource = context.createOscillator();
+    const unlockGain = context.createGain();
+    unlockGain.gain.setValueAtTime(0.0001, context.currentTime);
+    unlockSource.connect(unlockGain);
+    unlockGain.connect(context.destination);
+    unlockSource.start(context.currentTime);
+    unlockSource.stop(context.currentTime + 0.015);
+
+    try {
+      await context.resume();
+    } catch (_error) {
+      announce("音を開始できませんでした。もう一度、音を試すを押してください");
+      return false;
+    }
+
+    if (context.state !== "running") {
+      announce("音声が待機中です。iPhoneの音量を確認し、もう一度押してください");
+      return false;
+    }
+
     experience.soundEnabled = true;
     soundToggle.setAttribute("aria-pressed", "true");
-    soundToggle.textContent = "音：オン";
-    announce("音をオンにしました。音は操作したときだけ鳴ります");
-    playWaterTone(experience.viewIndex);
+    soundToggle.textContent = "音：停止";
+    return true;
+  };
+
+  const playLayers = async (frequencies, durationSeconds = 1.25) => {
+    const context = experience.audioContext;
+    if (!experience.soundEnabled || !context) {
+      return false;
+    }
+
+    if (context.state !== "running") {
+      try {
+        await context.resume();
+      } catch (_error) {
+        return false;
+      }
+    }
+
+    if (context.state !== "running") {
+      return false;
+    }
+
+    const now = context.currentTime;
+    const master = context.createGain();
+    const limiter = context.createDynamicsCompressor();
+    limiter.threshold.setValueAtTime(-24, now);
+    limiter.knee.setValueAtTime(18, now);
+    limiter.ratio.setValueAtTime(10, now);
+    limiter.attack.setValueAtTime(0.003, now);
+    limiter.release.setValueAtTime(0.22, now);
+    master.gain.setValueAtTime(0.0001, now);
+    master.gain.exponentialRampToValueAtTime(0.13, now + 0.045);
+    master.gain.exponentialRampToValueAtTime(0.0001, now + durationSeconds);
+    master.connect(limiter);
+    limiter.connect(context.destination);
+
+    frequencies.slice(0, 3).forEach((frequency, layerIndex) => {
+      const source = context.createOscillator();
+      const layerGain = context.createGain();
+      source.type = "sine";
+      source.frequency.setValueAtTime(frequency, now);
+      layerGain.gain.setValueAtTime([0.62, 0.2, 0.14][layerIndex] || 0.14, now);
+      source.connect(layerGain);
+      layerGain.connect(master);
+      experience.activeSources.add(source);
+      source.addEventListener("ended", () => experience.activeSources.delete(source), { once: true });
+      source.start(now + layerIndex * 0.08);
+      source.stop(now + durationSeconds + 0.05);
+    });
+    return true;
+  };
+
+  const playWaterTone = async (viewIndex = 0) => {
+    const basicTones = [523.25, 587.33, 659.25];
+    return playLayers([basicTones[viewIndex % basicTones.length]], 1.05);
+  };
+
+  const playSoundForest = async () => {
+    const forestToneSets = [
+      [523.25, 659.25, 783.99],
+      [493.88, 587.33, 739.99],
+      [440.0, 554.37, 698.46],
+    ];
+    return playLayers(forestToneSets[experience.viewIndex % forestToneSets.length], 2.4);
+  };
+
+  const enableSound = async (playConfirmation = true) => {
+    const ready = await prepareAudio();
+    if (!ready) {
+      return false;
+    }
+
+    announce("音を開始しました。停止は上の音ボタンです");
+    if (playConfirmation) {
+      await playWaterTone(experience.viewIndex);
+    }
+    return true;
   };
 
   const applyMotion = (enabled, userInitiated = false) => {
@@ -168,7 +237,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  pond.addEventListener("click", () => {
+  pond.addEventListener("click", async () => {
     if (experience.motionEnabled) {
       pond.classList.remove("has-ripple");
       void pond.offsetWidth;
@@ -176,10 +245,15 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     if (experience.soundEnabled) {
-      playWaterTone(experience.viewIndex);
-      gardenStatus.textContent = experience.motionEnabled
-        ? "選んだ視点が、波紋と小さな音になりました。"
-        : "選んだ視点が、小さな音になりました。動きは停止中です。";
+      const played = await playWaterTone(experience.viewIndex);
+      if (played) {
+        gardenStatus.textContent = experience.motionEnabled
+          ? "選んだ視点が、波紋と1つの水音になりました。"
+          : "選んだ視点が、1つの水音になりました。動きは停止中です。";
+      } else {
+        gardenStatus.textContent = "音を再開できませんでした。上の「音を試す」を押してください。";
+        disableSound();
+      }
     } else {
       gardenStatus.textContent = experience.motionEnabled
         ? "選んだ視点が、波紋になりました。音はオフです。"
@@ -190,11 +264,51 @@ document.addEventListener("DOMContentLoaded", () => {
   pond.addEventListener("animationend", () => pond.classList.remove("has-ripple"));
 
   motionToggle.addEventListener("click", () => applyMotion(!experience.motionEnabled, true));
-  soundToggle.addEventListener("click", () => {
+  soundToggle.addEventListener("click", async () => {
     if (experience.soundEnabled) {
       disableSound();
     } else {
-      enableSound();
+      soundToggle.disabled = true;
+      await enableSound(true);
+      if (soundToggle.textContent !== "音：非対応") {
+        soundToggle.disabled = false;
+      }
+    }
+  });
+
+  plusSampleButton.addEventListener("click", async () => {
+    if (experience.plusUsed) {
+      return;
+    }
+
+    plusSampleButton.disabled = true;
+    plusSampleButton.textContent = "音を準備しています…";
+    plusStatus.textContent = "iPhoneの音量を確認してください。";
+
+    const ready = experience.soundEnabled ? true : await enableSound(false);
+    if (!ready) {
+      plusSampleButton.disabled = false;
+      plusSampleButton.textContent = "Plus「音の森」をもう一度試す";
+      plusStatus.textContent = "音を開始できませんでした。iPhoneの音量を上げて、もう一度押してください。";
+      return;
+    }
+
+    const played = await playSoundForest();
+    if (!played) {
+      plusSampleButton.disabled = false;
+      plusSampleButton.textContent = "Plus「音の森」をもう一度試す";
+      plusStatus.textContent = "音を再生できませんでした。上の音ボタンを押してから再度お試しください。";
+      return;
+    }
+
+    experience.plusUsed = true;
+    plusSampleButton.textContent = "Plus「音の森」体験済み";
+    plusStatus.textContent = "3層の音と光が重なりました。この体験中のPlus見本は終了です。";
+    if (experience.motionEnabled) {
+      soundForest.classList.remove("is-playing");
+      void soundForest.offsetWidth;
+      soundForest.classList.add("is-playing");
+      window.setTimeout(() => soundForest.classList.remove("is-playing"), 3100);
     }
   });
 

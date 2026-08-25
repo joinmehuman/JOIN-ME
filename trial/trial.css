@@ -430,6 +430,86 @@ h2 {
   font-size: 0.88rem;
 }
 
+.plus-sample {
+  margin-top: 30px;
+  padding: 24px;
+  overflow: hidden;
+  border: 1px solid rgba(149, 112, 47, 0.38);
+  border-radius: 24px;
+  background:
+    radial-gradient(circle at 18% 18%, rgba(234, 216, 167, 0.5), transparent 12rem),
+    rgba(255, 253, 248, 0.78);
+  text-align: left;
+}
+
+.plus-sample h3 {
+  margin: 0;
+  font-size: 1.45rem;
+}
+
+.plus-sample > p:not(.eyebrow) {
+  color: var(--muted);
+}
+
+.sound-forest {
+  min-height: 92px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  place-items: center;
+  gap: 10px;
+  margin: 18px 0;
+  border-radius: 18px;
+  background: linear-gradient(145deg, rgba(23, 37, 60, 0.96), rgba(79, 145, 143, 0.9));
+}
+
+.forest-light {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #fff8c9 0 16%, rgba(234, 216, 167, 0.78) 26%, rgba(215, 238, 235, 0.12) 68%, transparent 72%);
+  opacity: 0.34;
+}
+
+.sound-forest.is-playing .forest-light {
+  animation: forest-light 1450ms ease-in-out 2 alternate;
+}
+
+.sound-forest.is-playing .light-two {
+  animation-delay: 110ms;
+}
+
+.sound-forest.is-playing .light-three {
+  animation-delay: 220ms;
+}
+
+.plus-button {
+  width: 100%;
+  min-height: 52px;
+  padding: 12px 18px;
+  border: 1px solid var(--gold);
+  border-radius: 999px;
+  background: var(--gold-soft);
+  color: var(--navy);
+  font-weight: 800;
+}
+
+.plus-button:disabled {
+  border-color: var(--line);
+  background: rgba(255, 255, 255, 0.58);
+  color: var(--muted);
+}
+
+.plus-status {
+  min-height: 1.7em;
+  margin: 12px 0 0;
+  font-size: 0.88rem;
+}
+
+.plus-limit {
+  margin: 8px 0 0;
+  font-size: 0.76rem;
+}
+
 .finish-actions {
   display: flex;
   align-items: center;
@@ -466,7 +546,8 @@ h2 {
 
 .motion-paused .experience-panel,
 .motion-paused .pond-glow,
-.motion-paused .lotus {
+.motion-paused .lotus,
+.motion-paused .forest-light {
   animation: none !important;
 }
 
@@ -494,6 +575,12 @@ h2 {
 @keyframes float {
   0%, 100% { transform: translateY(3px) rotate(-1deg); }
   50% { transform: translateY(-6px) rotate(1deg); }
+}
+
+@keyframes forest-light {
+  0% { opacity: 0.3; transform: scale(0.72); }
+  55% { opacity: 1; transform: scale(1.42); }
+  100% { opacity: 0.52; transform: scale(0.92); }
 }
 
 @media (max-width: 480px) {
@@ -541,6 +628,7 @@ h2 {
   body:not(.motion-user-enabled) .experience-panel,
   body:not(.motion-user-enabled) .pond-glow,
   body:not(.motion-user-enabled) .lotus,
+  body:not(.motion-user-enabled) .forest-light,
   body:not(.motion-user-enabled) .pond::before,
   body:not(.motion-user-enabled) .pond::after {
     animation: none;
