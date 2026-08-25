@@ -14,7 +14,7 @@
     <a class="back-link" href="../index.html" aria-label="問いの鏡の説明ページへ戻る">← JOIN ME</a>
     <div class="experience-controls" aria-label="体験の設定">
       <button id="motion-toggle" class="control-button" type="button" aria-pressed="true">動き：オン</button>
-      <button id="sound-toggle" class="control-button" type="button" aria-pressed="false">音：オフ</button>
+      <button id="sound-toggle" class="control-button" type="button" aria-pressed="false">音を試す</button>
     </div>
     <p id="control-status" class="visually-hidden" aria-live="polite"></p>
   </header>
@@ -96,6 +96,21 @@
       </button>
 
       <p id="garden-status" class="garden-status" aria-live="polite">波紋は、水面に触れたときだけ広がります。</p>
+
+      <aside class="plus-sample" aria-labelledby="plus-title">
+        <p class="eyebrow">Plus見本・この体験中に1回</p>
+        <h3 id="plus-title">音の森</h3>
+        <p>基本の水音とは別に、3層の音と光が重なるPlusの入口だけを体験できます。</p>
+        <div id="sound-forest" class="sound-forest" aria-hidden="true">
+          <span class="forest-light light-one"></span>
+          <span class="forest-light light-two"></span>
+          <span class="forest-light light-three"></span>
+        </div>
+        <button id="plus-sample-button" class="plus-button" type="button">Plus「音の森」を1回試す</button>
+        <p id="plus-status" class="plus-status" aria-live="polite">音はこのボタンを押した後だけ鳴ります。</p>
+        <p class="plus-limit">アカウントや保存を使わないため、このページを開いている間の1回です。再読込みをまたぐ利用回数は記録しません。</p>
+      </aside>
+
       <div class="finish-actions">
         <button id="restart-button" class="secondary-button" type="button">もう一度</button>
         <a class="text-link" href="../support-jp.html">日本の危機支援先</a>

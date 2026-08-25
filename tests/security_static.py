@@ -192,7 +192,7 @@ trial_required = (
     "18歳以上向け",
     "水面に触れる",
     "動き：オン",
-    "音：オフ",
+    "音を試す",
 )
 record("SURFACE-TRIAL-TRUTHFUL", all(term in trial_text for term in trial_required), f"required={trial_required}")
 record(
@@ -202,8 +202,18 @@ record(
 )
 record(
     "TRIAL-CONTROLS-MOTION-AND-SOUND",
-    all(term in trial_script_text for term in ("prefers-reduced-motion", "disableSound", "AudioContext", "has-ripple")),
+    all(term in trial_script_text for term in ("prefers-reduced-motion", "disableSound", "prepareAudio", "AudioContext", "has-ripple")),
     "reduced-motion, immediate sound stop, user-initiated Web Audio, and touch ripple implemented",
+)
+record(
+    "TRIAL-IOS-AUDIO-RESUME-AND-LIMITER",
+    all(term in trial_script_text for term in ("await context.resume()", "createDynamicsCompressor", "latencyHint", "unlockSource")),
+    "audio is unlocked from a user action, resumed before playback, amplified, and limited",
+)
+record(
+    "TRIAL-PLUS-ONE-SOUND-FOREST-SAMPLE",
+    all(term in trial_text + trial_script_text for term in ("Plus見本・この体験中に1回", "音の森", "3層の音と光", "plusUsed", "playSoundForest")),
+    "one in-memory Plus Sound Forest sample is present and is not described as account-level enforcement",
 )
 record(
     "TRIAL-NO-AUTOPLAY-OR-MEDIA-ASSET",
