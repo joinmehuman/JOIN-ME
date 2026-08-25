@@ -2,63 +2,25 @@
 
 自分を決めつけず、いまの状態と言葉を見つめるための自己観察プロダクトです。
 
-## 現在の公開範囲
+## 公開状態
 
-このリポジトリのGitHub Pagesは、公開前の開発確認ページです。
+GitHub Pagesによる簡易体験版の公開は、2026年8月25日に終了しました。
 
-- コンセプトと体験予定の流れ
-- 選択だけで進む無料の1分体験
-- 水庭の波紋、蓮、操作後だけ鳴る生成音
-- Plus「音の森」の3層音・光を、1回の体験中に1度だけ試す見本
-- 常時使える動き・音の停止操作
-- 18歳以上向けであること
-- 非医療・非診断の安全表示
-- 日本の緊急・危機支援先
+正式なSites版は別プロジェクトで管理しており、このGitHubリポジトリからは配信しません。
 
-自由記述入力、AI生成、会員登録、端末保存、決済は公開していません。1分体験の選択内容はメモリ内だけにあり、ページを閉じると消えます。
+## 保存しているもの
 
-Plus見本の「1回」はページを開いている間だけメモリで管理します。アカウントや永続保存がないため、再読込みや別端末をまたぐ回数制限は行いません。
-
-公開ページ：
-
-- https://joinmehuman.github.io/JOIN-ME/
-- https://joinmehuman.github.io/JOIN-ME/trial/
-- https://joinmehuman.github.io/JOIN-ME/support-jp.html
-
-## データ方針
-
-- 問い・回答を取得しない
-- analytics、session replay、選択内容の外部送信を使用しない
-- localStorage、sessionStorage、IndexedDBへ保存しない
-- 外部フォントや第三者スクリプトを自動読込みしない
-- 音源ファイルを置かず、利用者が音をオンにした操作後だけWeb Audioで小さな音を生成する
-
-将来入力機能を追加する場合も、問い・回答本文をURL、ログ、分析、Cache Storageへ含めません。
-
-## 主なファイル
-
-- `index.html`：開発確認ページ
-- `trial/`：Instagramのプロフィールリンクから直接開ける無料1分体験
-- `support-jp.html`：日本の緊急・危機支援先
-- `style.css`：両ページ共通の表示
-- `script.js`：モバイルメニューのみ
 - `config/`：市場・危機支援の公開可否設定
-- `legal/`：日本公開前の法務確認項目
-- `security/`：試験範囲と結果
-- `tests/security_static.py`：静的公開面の回帰試験
+- `legal/`：日本公開前の法務確認資料
+- `security/`：GitHub Pages版で実施した試験結果
+- `tests/`：GitHub Pages版の過去の検証コード
+- Git履歴：削除前の公開ファイルを復元可能
+- `archive/pre-cleanup-2026-08-25`：整理前コードの保存ブランチ
 
-## 検証
-
-```sh
-python3 tests/security_static.py
-```
-
-合格条件は終了コード0、全試験PASS、危機支援情報が確認期限内、秘密情報0件です。
+`security/`と`tests/`は、終了したGitHub Pages簡易版の履歴資料です。正式Sites版の試験結果ではありません。
 
 ## 公開制御
 
-`config/markets/jp.json`の`enabled=false`および`payment_enabled=false`を維持しています。有資格者の法務承認と製品機能の安全試験が完了するまで、AI入力、会員登録、決済を公開しません。
+`config/markets/jp.json`の`enabled=false`および`payment_enabled=false`を維持しています。
 
-GitHub Pages版は無料の非商用デモに限定します。オンライン事業、商取引、SaaS、パス販売には使用しません。
-
-ページ配信に伴い、GitHubはIPアドレス、端末情報、アクセス日時等のサービス利用情報を処理する場合があります。これは体験内の選択内容とは別です。詳細はGitHub General Privacy Statementを参照してください。
+このリポジトリでは、AI入力、会員登録、決済、期間パス販売を公開しません。
