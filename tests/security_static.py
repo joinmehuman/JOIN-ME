@@ -1,21 +1,21 @@
 #!/usr/bin/env python3
-"""Deterministic security and release checks for the current static JOIN ME surface."""
+"""Deterministic checks for the public GitHub Pages prelaunch surface."""
 
 from __future__ import annotations
 
-import hashlib
 import json
 import re
 import subprocess
 import sys
-from datetime import date
+from datetime import date, datetime
 from html.parser import HTMLParser
 from pathlib import Path
 from urllib.parse import urlparse
+from zoneinfo import ZoneInfo
 
 
 ROOT = Path(__file__).resolve().parents[1]
-TODAY = date(2026, 8, 20)
+TODAY = datetime.now(ZoneInfo("Asia/Tokyo")).date()
 
 
 class SurfaceParser(HTMLParser):
@@ -26,6 +26,8 @@ class SurfaceParser(HTMLParser):
         self.auto_origins: set[str] = set()
         self.capture_tags: list[str] = []
         self.script_sources: list[str] = []
+        self.csp_values: list[str] = []
+        self.referrer_values: list[str] = []
 
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
         values = dict(attrs)
@@ -33,17 +35,28 @@ class SurfaceParser(HTMLParser):
             self.ids.append(values["id"] or "")
         if tag in {"form", "input", "textarea", "select"} or "contenteditable" in values:
             self.capture_tags.append(tag)
+
+        if tag == "meta" and (values.get("http-equiv") or "").lower() == "content-security-policy":
+            self.csp_values.append(values.get("content") or "")
+        if tag == "meta" and (values.get("name") or "").lower() == "referrer":
+            self.referrer_values.append(values.get("content") or "")
+
         ref = None
         if tag in {"script", "img", "iframe", "source", "video", "audio"}:
             ref = values.get("src")
         elif tag == "link" and values.get("rel") in {"stylesheet", "preload", "preconnect"}:
             ref = values.get("href")
+        elif tag == "a":
+            ref = values.get("href")
+
         if tag == "script" and values.get("src"):
             self.script_sources.append(values["src"] or "")
+
         if ref:
             parsed = urlparse(ref)
             if parsed.scheme in {"http", "https"}:
-                self.auto_origins.add(f"{parsed.scheme}://{parsed.netloc}")
+                if tag != "a":
+                    self.auto_origins.add(f"{parsed.scheme}://{parsed.netloc}")
             elif not ref.startswith(("data:", "#", "tel:", "mailto:")):
                 self.local_refs.append(ref.split("?", 1)[0].split("#", 1)[0])
 
@@ -66,6 +79,17 @@ index_text, index = parse_html(ROOT / "index.html")
 support_text, support = parse_html(ROOT / "support-jp.html")
 script_text = (ROOT / "script.js").read_text(encoding="utf-8")
 css_text = (ROOT / "style.css").read_text(encoding="utf-8")
+readme_text = (ROOT / "README.md").read_text(encoding="utf-8")
+
+required_csp = (
+    "default-src 'self'",
+    "base-uri 'none'",
+    "form-action 'none'",
+    "object-src 'none'",
+    "script-src 'self'",
+    "style-src 'self'",
+    "connect-src 'none'",
+)
 
 for name, text, parser in (
     ("index", index_text, index),
@@ -87,8 +111,16 @@ for name, text, parser in (
     record(f"HTML-{name.upper()}-LOCAL-REFS", not missing, f"missing={missing or 'none'}")
     record(f"PRIVACY-{name.upper()}-NO-CAPTURE", not parser.capture_tags, f"capture_tags={parser.capture_tags or 'none'}")
     record(f"PRIVACY-{name.upper()}-NO-AUTO-THIRD-PARTY", not parser.auto_origins, f"auto_origins={sorted(parser.auto_origins) or 'none'}")
+    csp_ok = len(parser.csp_values) == 1 and all(item in parser.csp_values[0] for item in required_csp)
+    record(f"SECURITY-{name.upper()}-META-CSP", csp_ok, parser.csp_values[0] if parser.csp_values else "missing")
+    record(
+        f"PRIVACY-{name.upper()}-REFERRER",
+        parser.referrer_values == ["no-referrer"],
+        f"values={parser.referrer_values}",
+    )
 
 record("HTML-INDEX-SINGLE-SCRIPT", index.script_sources == ["script.js"], f"scripts={index.script_sources}")
+record("HTML-SUPPORT-NO-SCRIPT", not support.script_sources, f"scripts={support.script_sources or 'none'}")
 
 node_check = subprocess.run(
     ["node", "--check", str(ROOT / "script.js")],
@@ -112,6 +144,13 @@ network_js = sorted(
 )
 record("PRIVACY-JS-NO-NETWORK-SEND", not network_js, f"matches={network_js or 'none'}")
 
+storage_js = sorted(
+    pattern
+    for pattern in ("localStorage", "sessionStorage", "indexedDB", "caches.", "CacheStorage")
+    if pattern in script_text
+)
+record("PRIVACY-JS-NO-PERSISTENT-STORAGE", not storage_js, f"matches={storage_js or 'none'}")
+
 tracking_terms = sorted(
     term
     for term in ("google-analytics", "gtag(", "segment", "mixpanel", "amplitude", "fullstory", "hotjar", "logrocket", "sessionreplay")
@@ -133,47 +172,47 @@ scan_text = "\n".join(
 secret_hits = [name for name, pattern in secret_patterns.items() if re.search(pattern, scan_text)]
 record("SECRETS-STATIC-SCAN", not secret_hits, f"matches={secret_hits or 'none'}")
 
-price_ok = all(
-    phrase in index_text
-    for phrase in ("24時間使い放題", "110円", "30日パス", "380円", "自動更新はありません", "月額サブスクは現時点では導入しません")
+prelaunch_phrases = ("おかえり", "現在は開発確認ページです", "入力・AI・会員登録・保存・決済はまだ利用できません")
+record(
+    "SURFACE-PRELAUNCH-TRUTHFUL",
+    all(phrase in index_text for phrase in prelaunch_phrases),
+    f"required={prelaunch_phrases}",
 )
-obsolete = sorted(
+
+misleading_or_sales_terms = sorted(
     term
-    for term in ("330円", "580円", "500円", "1500円", "月額480円", "月額780円", "7日無料", "自動更新あり")
+    for term in ("自己観察を始める", "24時間使い放題", "30日パス", "購入する", "今すぐ購入")
     if term in index_text
 )
-record("MASTER-PRICE-CONSISTENCY", price_ok and not obsolete, f"obsolete={obsolete or 'none'}")
+record("SURFACE-NO-UNAVAILABLE-CTA-OR-SALES", not misleading_or_sales_terms, f"matches={misleading_or_sales_terms or 'none'}")
+
+legacy_terms = sorted(
+    term
+    for term in (
+        "\u932c\u91d1\u5854",
+        "\u932c\u91d1\u8853",
+        "\u53cd\u5bfe\u8a71\u306e\u932c\u91d1\u8853",
+    )
+    if term in scan_text
+)
+record("MASTER-NO-LEGACY-CONCEPTS", not legacy_terms, f"matches={legacy_terms or 'none'}")
+
+record("DEPLOY-NO-VERCEL-CONFIG", not (ROOT / "vercel.json").exists(), "vercel.json absent")
 
 market = json.loads((ROOT / "config/markets/jp.json").read_text(encoding="utf-8"))
-market_prices = {(item["id"], item["price_tax_inclusive"], item["duration_hours"], item["auto_renew"]) for item in market["passes"]}
-record(
-    "COUNTRY-JP-PRICE-CONFIG",
-    market_prices == {("24h", 110, 24, False), ("30d", 380, 720, False)} and market.get("monthly_subscription") == "not_offered",
-    f"passes={sorted(market_prices)}; monthly={market.get('monthly_subscription')}",
-)
-legal_is_approved = market.get("legal_approval_status") == "approved" and market.get("legal_approved_at") and market.get("review_expires_at")
-record(
-    "COUNTRY-JP-FAIL-CLOSED",
-    bool(legal_is_approved) or (market.get("enabled") is False and market.get("payment_enabled") is False),
-    f"legal={market.get('legal_approval_status')}; enabled={market.get('enabled')}; payment_enabled={market.get('payment_enabled')}",
-)
-
-vercel = json.loads((ROOT / "vercel.json").read_text(encoding="utf-8"))
-global_rule = next(rule for rule in vercel["headers"] if rule["source"] == "/(.*)")
-headers = {item["key"]: item["value"] for item in global_rule["headers"]}
-required_headers = {
-    "Content-Security-Policy",
-    "Strict-Transport-Security",
-    "X-Content-Type-Options",
-    "X-Frame-Options",
-    "Referrer-Policy",
-    "Permissions-Policy",
-    "Cross-Origin-Opener-Policy",
+market_prices = {
+    (item["id"], item["price_tax_inclusive"], item["duration_hours"], item["auto_renew"])
+    for item in market["passes"]
 }
-record("HEADERS-CONFIG-PRESENT", required_headers.issubset(headers), f"headers={sorted(headers)}")
-csp = headers.get("Content-Security-Policy", "")
-required_csp = ("default-src 'self'", "connect-src 'none'", "object-src 'none'", "frame-ancestors 'none'", "form-action 'none'", "base-uri 'none'")
-record("CSP-RESTRICTIVE", all(item in csp for item in required_csp), csp)
+record(
+    "COUNTRY-JP-CONFIG",
+    market.get("minimum_age") == 18
+    and market.get("enabled") is False
+    and market.get("payment_enabled") is False
+    and market_prices == {("24h", 110, 24, False), ("30d", 380, 720, False)}
+    and market.get("monthly_subscription") == "not_offered",
+    f"enabled={market.get('enabled')}; payment={market.get('payment_enabled')}; passes={sorted(market_prices)}",
+)
 
 crisis = json.loads((ROOT / "config/crisis/jp.json").read_text(encoding="utf-8"))
 route_ids = [route["id"] for route in crisis["routes"]]
@@ -188,43 +227,56 @@ required_routes = {
     "police_non_emergency",
     "consumer_contract_billing",
 }
-record("CRISIS-SCHEMA-AND-ROUTES", crisis.get("enabled") is True and required_routes.issubset(route_ids) and len(route_ids) == len(set(route_ids)), f"routes={route_ids}")
+record(
+    "CRISIS-SCHEMA-AND-ROUTES",
+    crisis.get("enabled") is True and required_routes.issubset(route_ids) and len(route_ids) == len(set(route_ids)),
+    f"routes={route_ids}",
+)
 review_due = date.fromisoformat(crisis["review_due"])
-record("CRISIS-REVIEW-NOT-EXPIRED", review_due > TODAY, f"verified_at={crisis['verified_at']}; review_due={review_due.isoformat()}")
+record(
+    "CRISIS-REVIEW-NOT-EXPIRED",
+    review_due > TODAY,
+    f"verified_at={crisis['verified_at']}; review_due={review_due.isoformat()}; today={TODAY.isoformat()}",
+)
 allowed_hosts = {"www.fdma.go.jp", "www.npa.go.jp", "www.mhlw.go.jp", "www.gender.go.jp", "www.caa.go.jp"}
 source_hosts = {urlparse(route["source"]).hostname for route in crisis["routes"]}
 record("CRISIS-OFFICIAL-SOURCE-HOSTS", source_hosts.issubset(allowed_hosts), f"hosts={sorted(source_hosts)}")
+
 phones = {route["phone"] for route in crisis["routes"]}
 displayed = {re.sub(r"[^0-9#]", "", value) for value in re.findall(r">([#0-9][#0-9\-]+)<", support_text)}
 normalized_registry = {re.sub(r"[^0-9#]", "", phone) for phone in phones}
-record("CRISIS-UI-MATCHES-REGISTRY", normalized_registry.issubset(displayed), f"registry={sorted(normalized_registry)}; displayed={sorted(displayed)}")
+record(
+    "CRISIS-UI-MATCHES-REGISTRY",
+    normalized_registry.issubset(displayed),
+    f"registry={sorted(normalized_registry)}; displayed={sorted(displayed)}",
+)
 
 css_external = re.findall(r"url\(\s*['\"]?https?://", css_text, re.I)
 record("CSS-NO-REMOTE-ASSETS", not css_external, f"remote_url_count={len(css_external)}")
 
-artifact_hashes = {
-    str(path.relative_to(ROOT)): hashlib.sha256(path.read_bytes()).hexdigest()
-    for path in sorted(ROOT.rglob("*"))
-    if path.is_file() and path.name != "SECURITY_TEST_RESULTS.json"
-}
+readme_ok = all(
+    phrase in readme_text
+    for phrase in ("GitHub Pages", "入力、AI生成、会員登録、端末保存、決済は公開していません", "python3 tests/security_static.py")
+)
+record("DOCS-CURRENT-SCOPE", readme_ok, "README describes the current prelaunch scope")
 
 failed = [item for item in results if item["status"] == "FAIL"]
 report = {
-    "scope": "static landing surface plus Japan crisis registry and deployment header configuration",
-    "source_commit": "711d8c865ce803413f6d00c04c024695453c2b20",
-    "tested_at": "2026-08-20",
+    "scope": "GitHub Pages prelaunch surface, Japan crisis registry, and fail-closed market configuration",
+    "tested_at": TODAY.isoformat(),
     "overall": "PASS_CURRENT_STATIC_SURFACE" if not failed else "FAIL",
     "product_release_gate": "BLOCKED_NOT_IMPLEMENTED",
+    "tests_total": len(results),
+    "tests_passed": len(results) - len(failed),
     "not_testable_in_current_repo": [
+        "question input and deletion E2E",
         "AI input/output dual safety classifier",
-        "prompt-injection and model-output safety",
-        "authentication, authorization, CSRF and rate limiting",
-        "AES-GCM IndexedDB save and delete-after-retrieval E2E",
+        "authentication and authorization",
+        "encrypted IndexedDB save and delete-after-retrieval E2E",
         "payment and entitlement enforcement",
-        "runtime DAST and penetration test against a deployed production-equivalent environment"
+        "runtime DAST and penetration test against a production-equivalent environment",
     ],
     "tests": results,
-    "sha256": artifact_hashes,
 }
 print(json.dumps(report, ensure_ascii=False, indent=2))
 sys.exit(1 if failed else 0)
