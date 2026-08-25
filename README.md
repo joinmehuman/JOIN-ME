@@ -25,7 +25,7 @@
 ## データ方針
 
 - 問い・回答を取得しない
-- analytics、session replay、外部送信を使用しない
+- analytics、session replay、選択内容の外部送信を使用しない
 - localStorage、sessionStorage、IndexedDBへ保存しない
 - 外部フォントや第三者スクリプトを自動読込みしない
 - 音源ファイルを置かず、利用者が音をオンにした操作後だけWeb Audioで小さな音を生成する
@@ -57,3 +57,5 @@ python3 tests/security_static.py
 `config/markets/jp.json`の`enabled=false`および`payment_enabled=false`を維持しています。有資格者の法務承認と製品機能の安全試験が完了するまで、AI入力、会員登録、決済を公開しません。
 
 GitHub Pages版は無料の非商用デモに限定します。オンライン事業、商取引、SaaS、パス販売には使用しません。
+
+ページ配信に伴い、GitHubはIPアドレス、端末情報、アクセス日時等のサービス利用情報を処理する場合があります。これは体験内の選択内容とは別です。詳細はGitHub General Privacy Statementを参照してください。
