@@ -126,7 +126,11 @@ for name, path, text, parser in (
 
 record("HTML-INDEX-SINGLE-SCRIPT", index.script_sources == ["script.js"], f"scripts={index.script_sources}")
 record("HTML-SUPPORT-NO-SCRIPT", not support.script_sources, f"scripts={support.script_sources or 'none'}")
-record("HTML-TRIAL-SINGLE-SCRIPT", trial.script_sources == ["trial.js"], f"scripts={trial.script_sources}")
+record(
+    "HTML-TRIAL-SINGLE-SCRIPT",
+    trial.script_sources == ["trial.js?v=20260825-audio-plus"],
+    f"scripts={trial.script_sources}",
+)
 
 for name, path in (("ROOT", ROOT / "script.js"), ("TRIAL", ROOT / "trial" / "trial.js")):
     node_check = subprocess.run(
